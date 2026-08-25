@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # V7.0.1
 
-      - uses: SeaweedbrainCY/crowdin-badge-action@<latest_tag_or_association_commit_sha1>
+      - uses: SeaweedbrainCY/crowdin-translation-progress@<latest_tag_or_association_commit_sha1>
         with:
           crowdin_token: ${{ secrets.CROWDIN_TOKEN }}
           crowdin_project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
