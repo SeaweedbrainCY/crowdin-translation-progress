@@ -7,7 +7,8 @@ glance.
 ![example](docs/example.svg)
 
 ## Usage
-
+> [!Important]
+> It is strongly advised to use a fixed version number or a fixed commit hash
 ```yaml
 name: Update Crowdin translation badge
 
@@ -23,9 +24,9 @@ jobs:
   update-badge:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # V7.0.1
 
-      - uses: SeaweedbrainCY/crowdin-badge-action@v1
+      - uses: SeaweedbrainCY/crowdin-badge-action@<latest_tag_or_association_commit_sha1>
         with:
           crowdin_token: ${{ secrets.CROWDIN_TOKEN }}
           crowdin_project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
