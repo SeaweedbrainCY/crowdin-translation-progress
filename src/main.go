@@ -72,7 +72,7 @@ func fetchSoureLang(base, projectID, token string) (string, error) {
 	}
 
 	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if err != nil {
 		return "", err
 	}
@@ -109,7 +109,7 @@ func fetchProgress(base, projectID, token string, minimumProgress int) ([]langPr
 		}
 
 		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		if err != nil {
 			return nil, err
 		}
@@ -307,6 +307,9 @@ func writeGithubOutput(key, value string) {
 	if err != nil {
 		return
 	}
+
+	//nolint:errcheck // Irrelevant
 	defer f.Close()
+	//nolint:errcheck // Irrelevant
 	fmt.Fprintf(f, "%s=%s\n", key, value)
 }
