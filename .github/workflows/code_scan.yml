@@ -1,0 +1,76 @@
+name: GO code testing and, security and quality scanning
+
+on:
+  workflow_call:
+  push:
+    branches:
+      - "*"
+      - "**"
+      - "*/*"
+      - "**/**"
+  pull_request:
+
+jobs:
+  semgrep_scan:
+    permissions:
+      contents: read
+    name: Semgrep scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # V7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: 3.x
+
+      - name: Install semgrep
+        run: python3 -m pip install semgrep
+
+      - name: Run semgrep
+        run: semgrep scan --error
+
+  golangci:
+    name: Go lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # V7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # V7
+        with:
+          go-version: "1.26.x"
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # 9.3.0
+        with:
+          version: v2.11
+          working-directory: ./src
+
+
+  go_vulncheck:
+    name: "Go vulncheck"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - id: govulncheck
+        uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+        with:
+          work-dir: src
+
+  poutine:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # V7.0.1
+      - name: poutine - GitHub Actions SAST
+        uses: boostsecurityio/poutine-action@v1.1.4 # v1.1.4
+
+      - name: Upload poutine SARIF file
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results.sarif
