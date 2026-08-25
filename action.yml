@@ -1,0 +1,35 @@
+name: 'Crowdin Translation Status Badge'
+description: 'Generates a SVG status card showing per-language translation progress from a Crowdin project.'
+author: 'SeaweedbrainCY'
+
+branding:
+  icon: 'align-left'
+  color: 'blue'
+
+inputs:
+  crowdin_token:
+    description: 'Crowdin API token (personal or project-scoped) with read access to the project and translation progress.'
+    required: true
+  crowdin_project_id:
+    description: 'Numeric Crowdin project ID.'
+    required: true
+  crowdine_api_base:
+    description: Override API base, default https://api.crowdin.com
+    required: false
+    default: ""
+  output_path:
+    description: 'Path (relative to the workspace) to write the generated SVG.'
+    required: false
+    default: 'badges/crowdin-status.svg'
+  minimum_translation_progress:
+    required: false
+    default: '10'
+    description: "Minimum translation progress for a lang to be included. Default: 10"
+
+outputs:
+  svg_path:
+    description: 'Path of the generated SVG file.'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

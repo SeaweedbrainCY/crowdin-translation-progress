@@ -5,7 +5,7 @@
 // Required env vars:
 //
 //	CROWDIN_TOKEN       Crowdin API token (personal or project token) with
-//	                     read access to the project and projects translations.
+//	                     read access to the project and projects translations
 //	CROWDIN_PROJECT_ID  Numeric Crowdin project ID.
 //
 // Optional env vars:
@@ -198,7 +198,7 @@ func renderSVG(langs []langProgress) string {
     <text x="%d" y="30" font-family="'Segoe UI', Ubuntu, sans-serif" font-size="16" font-weight="700" fill="#58a6ff">Translation Status</text>
     <text x="%d" y="30" text-anchor="end" font-family="'Segoe UI', Ubuntu, sans-serif" font-size="11" fill="#8b949e">via Crowdin</text>
     <line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#21262d" stroke-width="1"/>%s
-    <text x="%d" y="%d" font-family="'Segoe UI', Ubuntu, sans-serif" font-size="10" fill="#6e7681">Crowdin Translation Progress Github Action · updated automatically</text>
+    <text x="%d" y="%d" font-family="'Segoe UI', Ubuntu, sans-serif" font-size="10" fill="#6e7681">SeaweedbrainCY/crowdin-translation-progress · updated automatically</text>
   </g>
 </svg>`,
 		width, height, width, height,
@@ -213,25 +213,38 @@ func renderSVG(langs []langProgress) string {
 	)
 }
 
+// firstNonEmpty returns the first non-empty string, used to prefer a plain
+// env var (for local/manual runs) over the GitHub Action INPUT_* equivalent
+// (set automatically when running as a container action), or vice versa.
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 func main() {
-	token := os.Getenv("CROWDIN_TOKEN")
-	projectID := os.Getenv("CROWDIN_PROJECT_ID")
+	token := firstNonEmpty(os.Getenv("CROWDIN_TOKEN"), os.Getenv("INPUT_CROWDIN_TOKEN"))
+	projectID := firstNonEmpty(os.Getenv("CROWDIN_PROJECT_ID"), os.Getenv("INPUT_CROWDIN_PROJECT_ID"))
+
 	if token == "" || projectID == "" {
 		fmt.Fprintln(os.Stderr, "CROWDIN_TOKEN and CROWDIN_PROJECT_ID must be set")
 		os.Exit(1)
 	}
 
-	base := os.Getenv("CROWDIN_API_BASE")
+	base := firstNonEmpty(os.Getenv("CROWDIN_API_BASE"), os.Getenv("INPUT_CROWDIN_API_BASE"))
 	if base == "" {
 		base = "https://api.crowdin.com"
 	}
 
-	outputPath := os.Getenv("OUTPUT_PATH")
+	outputPath := firstNonEmpty(os.Getenv("OUTPUT_PATH"), os.Getenv("INPUT_OUTPUT_PATH"))
 	if outputPath == "" {
 		outputPath = "badges/crowdin-status.svg"
 	}
 
-	minimumProgress, minProgressErr := strconv.Atoi(os.Getenv("MINIMUM_TRANSLATION_PROGRESS"))
+	minimumProgress, minProgressErr := strconv.Atoi(firstNonEmpty(os.Getenv("MINIMUM_TRANSLATION_PROGRESS"), os.Getenv("INPUT_MINIMUM_TRANSLATION_PROGRESS")))
 	if minProgressErr != nil {
 		minimumProgress = 10
 	}
@@ -279,4 +292,21 @@ func main() {
 	}
 
 	fmt.Printf("wrote %s (%d languages)\n", outputPath, len(langs))
+	writeGithubOutput("svg_path", outputPath)
+}
+
+// writeGithubOutput appends a key=value pair to $GITHUB_OUTPUT if it's set,
+// so the value is usable as a step output when running inside a GitHub Action.
+// No-op (and non-fatal) outside of Actions.
+func writeGithubOutput(key, value string) {
+	path := os.Getenv("GITHUB_OUTPUT")
+	if path == "" {
+		return
+	}
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	fmt.Fprintf(f, "%s=%s\n", key, value)
 }
