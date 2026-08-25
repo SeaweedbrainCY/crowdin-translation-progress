@@ -30,7 +30,8 @@ jobs:
         with:
           crowdin_token: ${{ secrets.CROWDIN_TOKEN }}
           crowdin_project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
-          crowdin_project_id: 10
+          # crowdine_api_base: https://api.crowdin.com
+          # minimum_translation_progress: 10
           # output_path: badges/crowdin-status.svg   # optional, this is the default
 
       - name: Commit if changed
